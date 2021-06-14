@@ -106,16 +106,23 @@ namespace Lidgren.Network
 			if (!typen.Value.Contains("InternetGatewayDevice"))
 				return;
 
-			m_serviceName = "WANIPConnection";
-			XmlNode node = desc.SelectSingleNode("//tns:service[tns:serviceType=\"urn:schemas-upnp-org:service:" + m_serviceName + ":1\"]/tns:controlURL/text()", nsMgr);
-			if (node == null)
+
+			XmlNode node = null;
+			for (int counter = 1; counter < 4; counter++)
 			{
+				m_serviceName = "WANIPConnection";
+				node = desc.SelectSingleNode($"//tns:service[tns:serviceType=\"urn:schemas-upnp-org:service:{m_serviceName}:{counter}\"]/tns:controlURL/text()", nsMgr);
+				if (node != null)
+					break;
+
 				//try another service name
 				m_serviceName = "WANPPPConnection";
-				node = desc.SelectSingleNode("//tns:service[tns:serviceType=\"urn:schemas-upnp-org:service:" + m_serviceName + ":1\"]/tns:controlURL/text()", nsMgr);
-				if (node == null)
-					return;
+				node = desc.SelectSingleNode($"//tns:service[tns:serviceType=\"urn:schemas-upnp-org:service:{m_serviceName}:{counter}\"]/tns:controlURL/text()", nsMgr);
+				if (node != null)
+					break;
 			}
+			if (node == null)
+				return;
 
 			m_serviceUrl = CombineUrls(resp, node.Value);
 			m_peer.LogDebug("UPnP service ready");
